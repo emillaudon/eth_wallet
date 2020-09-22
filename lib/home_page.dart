@@ -157,7 +157,11 @@ class _HomePageState extends State<HomePage> {
     });
 
     jsonList.forEach((transaction) {
-      String direction = 'Sent';
+      String direction =
+          transaction['transactionData']['receivingAddress'] as String !=
+                  walletAddress.toLowerCase()
+              ? 'Sent'
+              : 'Received';
       double transactionValueInEth =
           double.parse(transaction['transactionData']['amount']);
       double transactionValueInUSD = calculateEthToUSD(transactionValueInEth);
