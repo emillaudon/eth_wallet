@@ -6,6 +6,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'bottom_button.dart';
 import 'apis.dart';
+import 'package:clipboard_manager/clipboard_manager.dart';
 
 class HomePage extends StatefulWidget {
   @override
@@ -60,6 +61,24 @@ class _HomePageState extends State<HomePage> {
     var data = json.decode(response.body);
     print(data['quotes']['USD']['price']);
     ethUSDPrice = data['quotes']['USD']['price'];
+  }
+
+  Future copyAddress(context) async {
+    ClipboardManager.copyToClipBoard(walletAddress).then((result) {
+      final snackBar = SnackBar(
+        content: Text(
+          'Address Copied to Clipboard',
+          style: TextStyle(color: Colors.white),
+        ),
+        backgroundColor: Colors.black,
+        action: SnackBarAction(
+          label: 'Undo',
+          onPressed: () {},
+        ),
+      );
+
+      Scaffold.of(context).showSnackBar(snackBar);
+    });
   }
 
   void sendButtonPressed() async {
@@ -155,7 +174,6 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
-//crossAxisAlignment: CrossAxisAlignment.stretch,
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -192,6 +210,32 @@ class _HomePageState extends State<HomePage> {
                           style: TextStyle(
                               fontSize: 21.0, color: Color(0xFF71727E)),
                         ),
+                        SizedBox(height: 5.0),
+                        Builder(
+                          builder: (ctx) => GestureDetector(
+                            onTap: () async {
+                              copyAddress(ctx);
+                            },
+                            child: Center(
+                              child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Text(
+                                      'Copy Address',
+                                      style: TextStyle(
+                                          fontSize: 12.0,
+                                          color: Colors.grey,
+                                          fontStyle: FontStyle.italic),
+                                    ),
+                                    Icon(
+                                      Icons.content_copy,
+                                      size: 12.0,
+                                      color: Colors.grey,
+                                    )
+                                  ]),
+                            ),
+                          ),
+                        )
                       ],
                     ),
                   ),
