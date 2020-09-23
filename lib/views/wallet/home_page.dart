@@ -15,6 +15,7 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   List<Widget> boxes = [];
+  List<Widget> walletButtons = [];
   double ethBalance;
   double ethUSDPrice;
   String address = walletAddress;
@@ -50,10 +51,60 @@ class _HomePageState extends State<HomePage> {
   }
 
   void initialize() async {
+    initializeWalletButtons();
     await getWalletName();
     await getEthBalance();
     await getAndUpdateUSDPrice();
     drawTransactionBoxes();
+  }
+
+  void initializeWalletButtons() {
+    walletButtons = [
+      RaisedButton(
+        color: Color(0xFF454A75),
+        disabledColor: Color(0xFF454A75),
+        child: Text('Wallet 1'),
+        onPressed: () {},
+      ),
+      RaisedButton(
+          color: Color(0xFF454A75),
+          disabledColor: Color(0xFF454A75),
+          child: Icon(Icons.add),
+          onPressed: () {
+            var myNameController = TextEditingController();
+            showDialog(
+                context: context,
+                builder: (_) => AlertDialog(
+                      title: Text("Create New Wallet"),
+                      backgroundColor: Color(0xFF1D1E33),
+                      content:
+                          Column(mainAxisSize: MainAxisSize.min, children: [
+                        Text("Choose Name of new Wallet, maximum 9 letters."),
+                        TextField(
+                          controller: myNameController,
+                          maxLength: 9,
+                          decoration: InputDecoration(hintText: 'Name'),
+                        )
+                      ]),
+                      actions: [
+                        FlatButton(
+                            child: Text('Cancel'),
+                            onPressed: () {
+                              Navigator.pop(context);
+                            }),
+                        FlatButton(
+                          child: Text('Accept'),
+                          onPressed: () {
+                            Navigator.pop(context);
+                            createNewWalletWithName(myNameController.text);
+                            myNameController.dispose();
+                          },
+                        ),
+                      ],
+                      elevation: 24.0,
+                    ));
+          })
+    ];
   }
 
   void getWalletName() async {
@@ -91,6 +142,19 @@ class _HomePageState extends State<HomePage> {
       );
 
       Scaffold.of(context).showSnackBar(snackBar);
+    });
+  }
+
+  void createNewWalletWithName(String name) {
+    setState(() {
+      walletButtons.insert(
+          walletButtons.length - 1,
+          RaisedButton(
+            color: Color(0xFF454A75),
+            disabledColor: Color(0xFF454A75),
+            child: Text(name),
+            onPressed: () {},
+          ));
     });
   }
 
@@ -330,24 +394,18 @@ class _HomePageState extends State<HomePage> {
                   ),
                   Expanded(
                     child: Container(
+                        height: 150.0,
                         child: Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          RaisedButton(
-                            color: Color(0xFF454A75),
-                            disabledColor: Color(0xFF454A75),
-                            child: Text('Wallet 1'),
-                            onPressed: () {},
-                          ),
-                          RaisedButton(
-                            color: Color(0xFF454A75),
-                            disabledColor: Color(0xFF454A75),
-                            child: Icon(Icons.add),
-                          ),
-                        ],
-                      ),
-                    )),
+                            child: Container(
+                          width: 100.0,
+                          child: ListView.builder(
+                              padding: EdgeInsets.only(top: 10.0),
+                              itemCount: walletButtons.length,
+                              itemBuilder: (BuildContext ctxt, int index) {
+                                print(index);
+                                return walletButtons[index];
+                              }),
+                        ))),
                   ),
                 ]),
             height: 200.0,
