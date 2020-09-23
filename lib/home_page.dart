@@ -146,7 +146,7 @@ class _HomePageState extends State<HomePage> {
         transactionValueInUSD, hash, timeStamp, note, index);
   }
 
-  drawTransactionBoxes() async {
+  Future<void> drawTransactionBoxes() async {
     var jsonData = await getJsonData();
     var jsonList = jsonData as List;
 
@@ -261,13 +261,16 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
           Expanded(
-            child: ListView.builder(
-                padding: EdgeInsets.zero,
-                itemCount: boxes.length,
-                itemBuilder: (BuildContext ctxt, int index) {
-                  print(index);
-                  return boxes[index];
-                }),
+            child: RefreshIndicator(
+              onRefresh: () => drawTransactionBoxes(),
+              child: ListView.builder(
+                  padding: EdgeInsets.zero,
+                  itemCount: boxes.length,
+                  itemBuilder: (BuildContext ctxt, int index) {
+                    print(index);
+                    return boxes[index];
+                  }),
+            ),
           ),
           BottomButton(
             onTap: () async {
