@@ -1,11 +1,11 @@
-import 'package:eth_wallet/send_page.dart';
+import 'send_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
-import 'transaction_box.dart';
+import '../widgets/transaction_box.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'bottom_button.dart';
-import 'apis.dart';
+import '../widgets/bottom_button.dart';
+import '../constants/apis.dart';
 import 'package:clipboard_manager/clipboard_manager.dart';
 
 class HomePage extends StatefulWidget {
@@ -106,8 +106,6 @@ class _HomePageState extends State<HomePage> {
         "note":
             "${transactionData['note'] != null ? transactionData['note'] : 'null'}"
       });
-
-      print(response.statusCode);
 
       if (response.statusCode == 201) {
         setState(() {

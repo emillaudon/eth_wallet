@@ -1,4 +1,4 @@
-import 'package:eth_wallet/bottom_button.dart';
+import 'file:///G:/Programming/API/Projekt/eth_wallet/lib/views/widgets/bottom_button.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart';
 
@@ -20,8 +20,6 @@ class _SendPageState extends State<SendPage> {
     myAmountController.dispose();
     super.dispose();
   }
-
-
 
   @override
   Widget build(BuildContext context) {
