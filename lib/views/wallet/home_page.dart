@@ -20,6 +20,11 @@ class _HomePageState extends State<HomePage> {
   String address = walletAddress;
   String walletName = '- -';
   String uSDPriceURL = 'https://api.coinpaprika.com/v1/tickers/eth-ethereum';
+  Widget nameEditWidget = Icon(
+    Icons.edit,
+    size: 15.0,
+    color: Colors.grey,
+  );
 
   @override
   void initState() {
@@ -68,7 +73,6 @@ class _HomePageState extends State<HomePage> {
   void getAndUpdateUSDPrice() async {
     var response = await http.get(uSDPriceURL);
     var data = json.decode(response.body);
-    print(data['quotes']['USD']['price']);
     ethUSDPrice = data['quotes']['USD']['price'];
   }
 
@@ -91,12 +95,27 @@ class _HomePageState extends State<HomePage> {
   }
 
   void changeWalletName(String newName) async {
+    setState(() {
+      nameEditWidget = SpinKitDoubleBounce(
+        color: Colors.white,
+        size: 15.0,
+      );
+    });
+
     var response =
         await http.put(changeWalletNameEndPoint, body: {"newName": newName});
 
     if (response.statusCode == 200) {
       setState(() {
         walletName = newName;
+      });
+
+      setState(() {
+        nameEditWidget = Icon(
+          Icons.edit,
+          size: 15.0,
+          color: Colors.grey,
+        );
       });
     }
   }
@@ -227,11 +246,7 @@ class _HomePageState extends State<HomePage> {
                                   style: TextStyle(
                                       fontSize: 25.0, color: Color(0xFF8D8E98)),
                                 ),
-                                Icon(
-                                  Icons.edit,
-                                  size: 15.0,
-                                  color: Colors.grey,
-                                ),
+                                nameEditWidget,
                               ]),
                           onTap: () {
                             var myNameController = TextEditingController();
