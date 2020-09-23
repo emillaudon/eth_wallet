@@ -18,6 +18,7 @@ class _HomePageState extends State<HomePage> {
   double ethBalance;
   double ethUSDPrice;
   String address = walletAddress;
+  String walletName = '- -';
   String uSDPriceURL = 'https://api.coinpaprika.com/v1/tickers/eth-ethereum';
 
   @override
@@ -44,9 +45,17 @@ class _HomePageState extends State<HomePage> {
   }
 
   void initialize() async {
+    await getWalletName();
     await getEthBalance();
     await getAndUpdateUSDPrice();
     drawTransactionBoxes();
+  }
+
+  void getWalletName() async {
+    var response = await http.get(walletNamesEndPoint);
+    var data = json.decode(response.body);
+    var name = data[1]['nameData']['name'];
+    walletName = name;
   }
 
   void getEthBalance() async {
@@ -79,6 +88,17 @@ class _HomePageState extends State<HomePage> {
 
       Scaffold.of(context).showSnackBar(snackBar);
     });
+  }
+
+  void changeWalletName(String newName) async {
+    var response =
+        await http.put(changeWalletNameEndPoint, body: {"newName": newName});
+
+    if (response.statusCode == 200) {
+      setState(() {
+        walletName = newName;
+      });
+    }
   }
 
   void sendButtonPressed() async {
@@ -197,10 +217,62 @@ class _HomePageState extends State<HomePage> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: <Widget>[
-                        Text(
-                          'My Wallet',
-                          style: TextStyle(
-                              fontSize: 25.0, color: Color(0xFF8D8E98)),
+                        GestureDetector(
+                          child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                SizedBox(width: 15.0),
+                                Text(
+                                  '${walletName}',
+                                  style: TextStyle(
+                                      fontSize: 25.0, color: Color(0xFF8D8E98)),
+                                ),
+                                Icon(
+                                  Icons.edit,
+                                  size: 15.0,
+                                  color: Colors.grey,
+                                ),
+                              ]),
+                          onTap: () {
+                            var myNameController = TextEditingController();
+                            setState(() {
+                              showDialog(
+                                  context: context,
+                                  builder: (_) => AlertDialog(
+                                        title: Text("Change Name"),
+                                        backgroundColor: Color(0xFF1D1E33),
+                                        content: Column(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Text(
+                                                  "Change Name of Wallet, maximum 9 letters."),
+                                              TextField(
+                                                controller: myNameController,
+                                                maxLength: 9,
+                                                decoration: InputDecoration(
+                                                    hintText: 'New Name'),
+                                              )
+                                            ]),
+                                        actions: [
+                                          FlatButton(
+                                              child: Text('Cancel'),
+                                              onPressed: () {
+                                                Navigator.pop(context);
+                                              }),
+                                          FlatButton(
+                                            child: Text('Accept'),
+                                            onPressed: () {
+                                              Navigator.pop(context);
+                                              changeWalletName(
+                                                  myNameController.text);
+                                              myNameController.dispose();
+                                            },
+                                          ),
+                                        ],
+                                        elevation: 24.0,
+                                      ));
+                            });
+                          },
                         ),
                         Text(
                           '${ethBalance != null ? ethBalance.toStringAsFixed(2) : "- -"} Eth',
@@ -242,7 +314,25 @@ class _HomePageState extends State<HomePage> {
                     ),
                   ),
                   Expanded(
-                    child: Container(),
+                    child: Container(
+                        child: Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          RaisedButton(
+                            color: Color(0xFF454A75),
+                            disabledColor: Color(0xFF454A75),
+                            child: Text('Wallet 1'),
+                            onPressed: () {},
+                          ),
+                          RaisedButton(
+                            color: Color(0xFF454A75),
+                            disabledColor: Color(0xFF454A75),
+                            child: Icon(Icons.add),
+                          ),
+                        ],
+                      ),
+                    )),
                   ),
                 ]),
             height: 200.0,
