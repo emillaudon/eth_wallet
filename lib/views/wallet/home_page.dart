@@ -51,19 +51,20 @@ class _HomePageState extends State<HomePage> {
   }
 
   void initialize() async {
-    initializeWalletButtons();
     await getWalletName();
+    initializeWalletButtons();
     await getEthBalance();
     await getAndUpdateUSDPrice();
     drawTransactionBoxes();
   }
 
   void initializeWalletButtons() {
+    walletButtons.clear();
     walletButtons = [
       RaisedButton(
         color: Color(0xFF454A75),
         disabledColor: Color(0xFF454A75),
-        child: Text('Wallet 1'),
+        child: Text(walletName),
         onPressed: () {},
       ),
       RaisedButton(
@@ -180,6 +181,7 @@ class _HomePageState extends State<HomePage> {
           size: 15.0,
           color: Colors.grey,
         );
+        initializeWalletButtons();
       });
     }
   }
