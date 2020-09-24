@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:eth_wallet/views/constants/apis.dart';
 import 'package:http/http.dart' as http;
 import 'package:eth_wallet/models/wallet.dart';
 import 'package:eth_wallet/views/constants/api_handler.dart';
@@ -56,6 +57,15 @@ class NetWorkingBrain {
         walletName: data['name'] as String,
         walletNumber: data['number'] as int,
         walletAddress: data['address'] as String);
+  }
+
+  Future changeWalletName(newName, walletAddress) async {
+    return await http.put(apiHandler.changeWalletNameEndPoint(walletAddress),
+        body: {"newName": newName});
+  }
+
+  void deleteWallet(wallet) async {
+    await http.delete(apiHandler.deleteWalletEndPoint(wallet.walletAddress));
   }
 
   Future getTransactions(wallet) async {
