@@ -1,3 +1,5 @@
+import 'package:eth_wallet/views/constants/apis.dart';
+
 import 'send_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
@@ -5,8 +7,10 @@ import '../widgets/transaction_box.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../widgets/bottom_button.dart';
-import '../constants/apis.dart';
+import '../constants/api_handler.dart';
 import 'package:clipboard_manager/clipboard_manager.dart';
+import 'package:eth_wallet/models/wallet.dart';
+import 'package:eth_wallet/models/networking_brain.dart';
 
 class HomePage extends StatefulWidget {
   @override
@@ -14,13 +18,21 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  NetWorkingBrain netWorkingBrain = NetWorkingBrain();
+  Wallet currentWallet;
+
+  //double ethBalance;
+  double ethUSDPrice;
+
+  //String address;
+  //String walletName = '- -';
+
+  List<Wallet> wallets = [];
   List<Widget> boxes = [];
   List<Widget> walletButtons = [];
-  double ethBalance;
-  double ethUSDPrice;
-  String address = walletAddress;
-  String walletName = '- -';
-  String uSDPriceURL = 'https://api.coinpaprika.com/v1/tickers/eth-ethereum';
+  //int walletNumber;
+
+  //String uSDPriceURL = 'https://api.coinpaprika.com/v1/tickers/eth-ethereum';
   Widget nameEditWidget = Icon(
     Icons.edit,
     size: 15.0,
@@ -40,22 +52,22 @@ class _HomePageState extends State<HomePage> {
     initialize();
   }
 
-  onTransactionBoxTap(int index) {
-    print('tes ${index}');
-    TransactionBox transactionBox = boxes[index];
-    print(transactionBox.getNote());
-    setState(() {
-      transactionBox.setNote(' ');
-    });
-    print(transactionBox.note);
+  void initialize() async {
+    wallets = await netWorkingBrain.getWalletNamesAndNumber();
+    ethUSDPrice = await netWorkingBrain.getUSDPrice();
+    await updateWalletVariables(wallets[0]);
+    //ethBalance = await netWorkingBrain.getEthBalance(wallets[0].walletAddress);
+    drawTransactionBoxes(wallets[0]);
+    initializeWalletButtons();
   }
 
-  void initialize() async {
-    await getWalletName();
-    initializeWalletButtons();
-    await getEthBalance();
-    await getAndUpdateUSDPrice();
-    drawTransactionBoxes();
+  void updateWalletVariables(wallet) async {
+    double balance = await netWorkingBrain.getEthBalance(wallet.walletAddress);
+    wallet.updateBalance(balance);
+    setState(() {
+      currentWallet = wallet;
+      //walletName = currentWallet.walletName;
+    });
   }
 
   void initializeWalletButtons() {
@@ -64,7 +76,7 @@ class _HomePageState extends State<HomePage> {
       RaisedButton(
         color: Color(0xFF454A75),
         disabledColor: Color(0xFF454A75),
-        child: Text(walletName),
+        child: Text(currentWallet.walletName),
         onPressed: () {},
       ),
       RaisedButton(
@@ -106,27 +118,58 @@ class _HomePageState extends State<HomePage> {
                     ));
           })
     ];
+    if (wallets.length > 0) {
+      wallets.forEach((wallet) {
+        if (wallet.walletNumber != 0) {
+          insertWalletButton(wallet.walletName);
+        }
+      });
+    }
   }
 
-  void getWalletName() async {
-    var response = await http.get(walletNamesEndPoint);
-    var data = json.decode(response.body);
-    var name = data[1]['nameData']['name'];
-    walletName = name;
+  onTransactionBoxTap(int index) {
+    print('tes ${index}');
+    TransactionBox transactionBox = boxes[index];
+    print(transactionBox.getNote());
+    setState(() {
+      transactionBox.setNote(' ');
+    });
+    print(transactionBox.note);
   }
 
+  /*
+  void getWalletNamesAndNumber() async {
+    var response = await http.get(walletsEndPoint);
+    var data = json.decode(response.body) as List;
+    data.forEach((wallet) {
+      wallets.add(Wallet(
+          walletNumber: wallet['numberData']['number'],
+          walletName: wallet['nameData']['name'],
+          walletAddress: wallet['id']));
+    });
+    wallets.sort((a, b) => (a.walletNumber).compareTo(b.walletNumber));
+
+    walletName = wallets[0].walletName;
+  }
+   */
+
+  /*
   void getEthBalance() async {
-    var response = await http.get(balanceEndPoint);
+    //TODO: use wallet number
+    var response = await http.get(balanceEndPoint);i
     var data = json.decode(response.body);
     var ethBalanceData = double.parse(data['balanceData']['balance']);
     ethBalance = ethBalanceData;
   }
-
+   */
+/*
   void getAndUpdateUSDPrice() async {
     var response = await http.get(uSDPriceURL);
     var data = json.decode(response.body);
     ethUSDPrice = data['quotes']['USD']['price'];
   }
+
+ */
 
   Future copyAddress(context) async {
     ClipboardManager.copyToClipBoard(walletAddress).then((result) {
@@ -147,6 +190,14 @@ class _HomePageState extends State<HomePage> {
   }
 
   void createNewWalletWithName(String name) {
+    setState(() async {
+      var newWallet = await netWorkingBrain.createNewWallet(name);
+      wallets.add(newWallet);
+      insertWalletButton(newWallet.walletName);
+    });
+  }
+
+  void insertWalletButton(name) {
     setState(() {
       walletButtons.insert(
           walletButtons.length - 1,
@@ -172,7 +223,7 @@ class _HomePageState extends State<HomePage> {
 
     if (response.statusCode == 200) {
       setState(() {
-        walletName = newName;
+        currentWallet.updateName(newName);
       });
 
       setState(() {
@@ -205,18 +256,14 @@ class _HomePageState extends State<HomePage> {
       print(boxes.length);
       print('clicked');
 
-      var response = await http.post(sendEndPoint, body: {
-        "address": "${transactionData['address']}",
-        "amount": "${transactionData['amount']}",
-        "note":
-            "${transactionData['note'] != null ? transactionData['note'] : 'null'}"
-      });
+      var newBalancesponse = await netWorkingBrain
+          .perFormTransactionAndReturnNewBalance(transactionData);
 
-      if (response.statusCode == 201) {
+      if (newBalancesponse.statusCode == 201) {
         setState(() {
-          updateBalance(response);
+          updateBalance(newBalancesponse);
         });
-        drawTransactionBoxes();
+        drawTransactionBoxes(wallets[0].walletNumber);
       }
     }
   }
@@ -224,16 +271,18 @@ class _HomePageState extends State<HomePage> {
   void updateBalance(response) {
     var data = json.decode(response.body);
     setState(() {
-      ethBalance = double.parse(data);
+      currentWallet.updateBalance(double.parse(data));
     });
   }
 
+  /*
   Future getJsonData() async {
     String URL = transactionsEndPoint;
     var response = await http.get(URL);
     var data = json.decode(response.body);
     return data;
   }
+   */
 
   double calculateEthToUSD(double ethToCalculate) {
     return ethToCalculate * ethUSDPrice;
@@ -243,12 +292,31 @@ class _HomePageState extends State<HomePage> {
     boxes.insert(0, SizedBox(height: 30.0));
   }
 
-  Widget drawTransactionBox(direction, transactionValueInEth,
-      transactionValueInUSD, hash, timeStamp, note, index) {
-    return TransactionBox(direction, transactionValueInEth,
-        transactionValueInUSD, hash, timeStamp, note, index);
+  Widget drawTransactionBox(transaction, index) {
+    return TransactionBox(
+        transaction.direction,
+        transaction.transactionValueInEth,
+        transaction.transactionValueInUSD,
+        transaction.hash,
+        transaction.timeStamp,
+        transaction.note,
+        index);
   }
 
+  Future<void> drawTransactionBoxes(wallet) async {
+    List transactions = await netWorkingBrain.getTransactions(wallet);
+    boxes.clear();
+    transactions.forEach((transaction) {
+      setState(() {
+        boxes.add(SizedBox(
+          height: 30.0,
+        ));
+        boxes.add(drawTransactionBox(transaction, boxes.length));
+      });
+    });
+  }
+
+  /*
   Future<void> drawTransactionBoxes() async {
     var jsonData = await getJsonData();
     var jsonList = jsonData as List;
@@ -281,6 +349,8 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
+   */
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -308,7 +378,7 @@ class _HomePageState extends State<HomePage> {
                               children: [
                                 SizedBox(width: 15.0),
                                 Text(
-                                  '${walletName}',
+                                  '${currentWallet != null ? currentWallet.balance.toStringAsFixed(2) : "- -"}',
                                   style: TextStyle(
                                       fontSize: 25.0, color: Color(0xFF8D8E98)),
                                 ),
@@ -356,12 +426,12 @@ class _HomePageState extends State<HomePage> {
                           },
                         ),
                         Text(
-                          '${ethBalance != null ? ethBalance.toStringAsFixed(2) : "- -"} Eth',
+                          '${currentWallet != null ? currentWallet.balance.toStringAsFixed(2) : "- -"} Eth',
                           style: TextStyle(
                               fontSize: 21.0, color: Color(0xFF71727E)),
                         ),
                         Text(
-                          '${ethBalance != null ? calculateEthToUSD(ethBalance).toStringAsFixed(2) : "- -"} USD',
+                          '${currentWallet != null ? calculateEthToUSD(currentWallet.balance).toStringAsFixed(2) : "- -"} USD',
                           style: TextStyle(
                               fontSize: 21.0, color: Color(0xFF71727E)),
                         ),
@@ -425,7 +495,7 @@ class _HomePageState extends State<HomePage> {
           ),
           Expanded(
             child: RefreshIndicator(
-              onRefresh: () => drawTransactionBoxes(),
+              onRefresh: () => drawTransactionBoxes(wallets[0].walletNumber),
               child: ListView.builder(
                   padding: EdgeInsets.zero,
                   itemCount: boxes.length,
