@@ -1,6 +1,7 @@
 import 'package:eth_wallet/views/wallet/home_page.dart';
 import 'package:flutter/material.dart';
 import 'create_page.dart';
+import 'package:eth_wallet/models/networking_brain.dart';
 
 class LoginPage extends StatefulWidget {
   @override
@@ -8,7 +9,21 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
+  NetWorkingBrain netWorkingBrain = NetWorkingBrain();
   TextEditingController myUserNameController = TextEditingController();
+  TextEditingController myPasswordController = TextEditingController();
+
+  void loginAndChangePage(context) async {
+    var email = myUserNameController.text;
+    var password = myPasswordController.text;
+
+    var loginData = await netWorkingBrain.login(email, password);
+
+    setState(() {
+      Navigator.pushReplacement(context,
+          MaterialPageRoute(builder: (context) => HomePage(loginData)));
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -39,6 +54,7 @@ class _LoginPageState extends State<LoginPage> {
             Padding(
               padding: EdgeInsets.only(left: 20.0, right: 20.0),
               child: TextField(
+                controller: myPasswordController,
                 cursorColor: Colors.purple,
                 decoration: InputDecoration(
                     hintText: 'Password', border: OutlineInputBorder()),
@@ -56,10 +72,7 @@ class _LoginPageState extends State<LoginPage> {
                   style: TextStyle(fontSize: 20.0),
                 ),
                 onPressed: () {
-                  setState(() {
-                    Navigator.pushReplacement(context,
-                        MaterialPageRoute(builder: (context) => HomePage()));
-                  });
+                  loginAndChangePage(context);
                 },
               ),
             ),

@@ -13,8 +13,8 @@ class _CreatePageState extends State<CreatePage> {
   @override
   void initState() {
     super.initState();
-    var wordPaid = WordPair.random();
-    mnemonic = wordPaid.asLowerCase;
+
+    generateMnemonic();
   }
 
   Text generateTextBoxes(int index) {

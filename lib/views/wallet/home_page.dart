@@ -1,4 +1,5 @@
 import 'package:eth_wallet/views/constants/apis.dart';
+import 'package:flutter/cupertino.dart';
 
 import 'send_page.dart';
 import 'package:flutter/material.dart';
@@ -13,11 +14,15 @@ import 'package:eth_wallet/models/wallet.dart';
 import 'package:eth_wallet/models/networking_brain.dart';
 
 class HomePage extends StatefulWidget {
+  final Map loginData;
+  HomePage(this.loginData);
+
   @override
-  _HomePageState createState() => _HomePageState();
+  _HomePageState createState() => _HomePageState(loginData);
 }
 
 class _HomePageState extends State<HomePage> {
+  Map loginData;
   NetWorkingBrain netWorkingBrain = NetWorkingBrain();
   Wallet currentWallet;
 
@@ -33,9 +38,12 @@ class _HomePageState extends State<HomePage> {
     color: Colors.grey,
   );
 
+  _HomePageState(this.loginData);
+
   @override
   void initState() {
     super.initState();
+
     boxes.insert(0, SizedBox(height: 200.0));
     boxes.insert(
         (1),
@@ -43,6 +51,10 @@ class _HomePageState extends State<HomePage> {
           color: Colors.white,
           size: 50.0,
         ));
+    print(widget.loginData);
+    netWorkingBrain.updateLoginData(widget.loginData);
+    //WidgetsBinding.instance
+    //    .addPostFrameCallback((_) => print(widget.loginData));
     initialize();
   }
 

@@ -7,11 +7,34 @@ import 'package:eth_wallet/models/transaction.dart';
 
 class NetWorkingBrain {
   ApiHandler apiHandler = ApiHandler();
+  String loginToken;
+  String userId;
   double uSDPrice;
+
+  void updateLoginData(Map loginData) {
+    this.loginToken = loginData['idToken'];
+    this.userId = loginData['localId'];
+  }
+
+  Future login(String email, String password) async {
+    var url = apiHandler.signInEndPoint();
+    var response = await http.post(url, body: {
+      "email": email,
+      "password": password,
+      "returnSecureToken": "true"
+    });
+    var data = json.decode(response.body);
+
+    var loginData = Map();
+    loginData['idToken'] = data['idToken'];
+    loginData['localId'] = data['localId'];
+    return loginData;
+  }
 
   Future getWalletNamesAndNumber() async {
     var wallets = <Wallet>[];
-    var response = await http.get(apiHandler.walletsEndPoint());
+    var response = await http.get(apiHandler.walletsEndPoint(this.userId),
+        headers: {"Authorization": "Bearer ${this.loginToken}"});
     var data = json.decode(response.body) as List;
     data.forEach((wallet) {
       wallets.add(Wallet(
@@ -26,8 +49,9 @@ class NetWorkingBrain {
   }
 
   Future<double> getEthBalance(Wallet wallet) async {
-    var response =
-        await http.get(apiHandler.balanceEndPoint(wallet.walletAddress));
+    var response = await http.get(
+        apiHandler.balanceEndPoint(wallet.walletAddress, this.userId),
+        headers: {"Authorization": "Bearer ${this.loginToken}"});
     print(response.statusCode);
     var data = json.decode(response.body);
     var ethBalanceData = double.parse(data['balanceData']['balance']);
@@ -43,7 +67,9 @@ class NetWorkingBrain {
 
   Future perFormTransactionAndReturnNewBalance(
       Wallet wallet, transactionData) async {
-    var newBalance = await http.post(apiHandler.sendEndPoint(), body: {
+    var newBalance = await http.post(apiHandler.sendEndPoint(userId), headers: {
+      "Authorization": "Bearer ${this.loginToken}"
+    }, body: {
       "mnemonic": "${wallet.mnemonic}",
       "walletNumber": "${wallet.walletNumber}",
       "recipient": "${transactionData['address']}",
@@ -55,7 +81,9 @@ class NetWorkingBrain {
   }
 
   Future createNewWallet(String name, Wallet wallet) async {
-    var response = await http.post(apiHandler.createNewWalletEndPoint(),
+    var response = await http.post(
+        apiHandler.createNewWalletEndPoint(this.userId),
+        headers: {"Authorization": "Bearer ${this.loginToken}"},
         body: {"walletName": name, "mnemonic": "${wallet.mnemonic}"});
     var data = json.decode(response.body);
     print(data);
@@ -67,19 +95,24 @@ class NetWorkingBrain {
   }
 
   Future changeWalletName(newName, walletAddress) async {
-    return await http.put(apiHandler.changeWalletNameEndPoint(walletAddress),
+    return await http.put(
+        apiHandler.changeWalletNameEndPoint(walletAddress, this.userId),
+        headers: {"Authorization": "Bearer ${this.loginToken}"},
         body: {"newName": newName});
   }
 
   void deleteWallet(wallet) async {
-    await http.delete(apiHandler.deleteWalletEndPoint(wallet.walletAddress));
+    await http.delete(
+        apiHandler.deleteWalletEndPoint(wallet.walletAddress, this.userId),
+        headers: {"Authorization": "Bearer ${this.loginToken}"});
   }
 
   Future getTransactions(Wallet wallet) async {
     List transactions = [];
-    String URL =
-        apiHandler.transactionsEndPoint(wallet.walletNumber, wallet.mnemonic);
-    var response = await http.get(URL);
+    String URL = apiHandler.transactionsEndPoint(
+        wallet.walletNumber, wallet.mnemonic, this.userId);
+    var response = await http
+        .get(URL, headers: {"Authorization": "Bearer ${this.loginToken}"});
     if (response.statusCode == 200) {
       var jsonData = json.decode(response.body);
 
