@@ -25,8 +25,10 @@ class NetWorkingBrain {
     return wallets;
   }
 
-  Future<double> getEthBalance(walletAddress) async {
-    var response = await http.get(apiHandler.balanceEndPoint(walletAddress));
+  Future<double> getEthBalance(Wallet wallet) async {
+    var response =
+        await http.get(apiHandler.balanceEndPoint(wallet.walletAddress));
+    print(response.statusCode);
     var data = json.decode(response.body);
     var ethBalanceData = double.parse(data['balanceData']['balance']);
     return ethBalanceData;
@@ -40,9 +42,10 @@ class NetWorkingBrain {
   }
 
   Future perFormTransactionAndReturnNewBalance(
-      walletNumber, transactionData) async {
+      Wallet wallet, transactionData) async {
     var newBalance = await http.post(apiHandler.sendEndPoint(), body: {
-      "walletNumber": "${walletNumber}",
+      "mnemonic": "${wallet.mnemonic}",
+      "walletNumber": "${wallet.walletNumber}",
       "recipient": "${transactionData['address']}",
       "amount": "${transactionData['amount']}",
       "note":
@@ -74,7 +77,8 @@ class NetWorkingBrain {
 
   Future getTransactions(Wallet wallet) async {
     List transactions = [];
-    String URL = apiHandler.transactionsEndPoint(wallet.walletNumber);
+    String URL =
+        apiHandler.transactionsEndPoint(wallet.walletNumber, wallet.mnemonic);
     var response = await http.get(URL);
     if (response.statusCode == 200) {
       var jsonData = json.decode(response.body);

@@ -55,7 +55,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   void updateWalletVariables(Wallet wallet) async {
-    double balance = await netWorkingBrain.getEthBalance(wallet.walletAddress);
+    double balance = await netWorkingBrain.getEthBalance(wallet);
     wallet.updateBalance(balance);
     setState(() {
       currentWallet = wallet;
@@ -75,8 +75,7 @@ class _HomePageState extends State<HomePage> {
               size: 50.0,
             ));
       });
-      var balance = await netWorkingBrain
-          .getEthBalance(wallets[walletNumber].walletAddress);
+      var balance = await netWorkingBrain.getEthBalance(wallets[walletNumber]);
       wallets[walletNumber].updateBalance(balance);
       setState(() {
         currentWallet = wallets[walletNumber];
@@ -288,7 +287,7 @@ class _HomePageState extends State<HomePage> {
 
       var newBalancesponse =
           await netWorkingBrain.perFormTransactionAndReturnNewBalance(
-              currentWallet.walletNumber, transactionData);
+              currentWallet, transactionData);
 
       if (newBalancesponse.statusCode == 201) {
         setState(() {
@@ -490,8 +489,8 @@ class _HomePageState extends State<HomePage> {
             child: RefreshIndicator(
               onRefresh: () async {
                 drawTransactionBoxes(currentWallet);
-                var balance = await netWorkingBrain
-                    .getEthBalance(currentWallet.walletAddress);
+                var balance =
+                    await netWorkingBrain.getEthBalance(currentWallet);
                 setState(() {
                   currentWallet.updateBalance(balance);
                 });
