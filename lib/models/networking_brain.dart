@@ -15,6 +15,7 @@ class NetWorkingBrain {
     var data = json.decode(response.body) as List;
     data.forEach((wallet) {
       wallets.add(Wallet(
+          mnemonic: wallet['mnemonicData']['mnemonic'],
           walletNumber: wallet['numberData']['number'],
           walletName: wallet['nameData']['name'],
           walletAddress: wallet['id']));
@@ -50,15 +51,16 @@ class NetWorkingBrain {
     return newBalance;
   }
 
-  Future createNewWallet(name) async {
-    var response = await http
-        .post(apiHandler.createNewWalletEndPoint(), body: {"walletName": name});
+  Future createNewWallet(String name, Wallet wallet) async {
+    var response = await http.post(apiHandler.createNewWalletEndPoint(),
+        body: {"walletName": name, "mnemonic": "${wallet.mnemonic}"});
     var data = json.decode(response.body);
     print(data);
     return Wallet(
         walletName: data['name'] as String,
         walletNumber: data['number'] as int,
-        walletAddress: data['address'] as String);
+        walletAddress: data['address'] as String,
+        mnemonic: data['mnemonic'] as String);
   }
 
   Future changeWalletName(newName, walletAddress) async {
@@ -74,34 +76,37 @@ class NetWorkingBrain {
     List transactions = [];
     String URL = apiHandler.transactionsEndPoint(wallet.walletNumber);
     var response = await http.get(URL);
-    var jsonData = json.decode(response.body);
+    if (response.statusCode == 200) {
+      var jsonData = json.decode(response.body);
 
-    var jsonList = jsonData as List;
+      var jsonList = jsonData as List;
 
-    jsonList.sort((a, b) => (b['transactionData']['time'] as int)
-        .compareTo(a['transactionData']['time'] as int));
+      jsonList.sort((a, b) => (b['transactionData']['time'] as int)
+          .compareTo(a['transactionData']['time'] as int));
 
-    jsonList.forEach((transaction) {
-      String direction =
-          transaction['transactionData']['receivingAddress'] as String !=
-                  wallet.walletAddress.toLowerCase()
-              ? 'Sent'
-              : 'Received';
-      double transactionValueInEth =
-          double.parse(transaction['transactionData']['amount']);
-      double transactionValueInUSD = calculateEthToUSD(transactionValueInEth);
-      String hash = transaction['transactionData']['hash'];
-      int timeStamp = transaction['transactionData']['time'];
-      String note = transaction['transactionData']['note'];
+      jsonList.forEach((transaction) {
+        String direction =
+            transaction['transactionData']['receivingAddress'] as String !=
+                    wallet.walletAddress.toLowerCase()
+                ? 'Sent'
+                : 'Received';
+        double transactionValueInEth =
+            double.parse(transaction['transactionData']['amount']);
+        double transactionValueInUSD = calculateEthToUSD(transactionValueInEth);
+        String hash = transaction['transactionData']['hash'];
+        int timeStamp = transaction['transactionData']['time'];
+        String note = transaction['transactionData']['note'];
 
-      transactions.add(Transaction(
-          direction: direction,
-          transactionValueInEth: transactionValueInEth,
-          transactionValueInUSD: transactionValueInUSD,
-          hash: hash,
-          timeStamp: timeStamp,
-          note: note));
-    });
+        transactions.add(Transaction(
+            direction: direction,
+            transactionValueInEth: transactionValueInEth,
+            transactionValueInUSD: transactionValueInUSD,
+            hash: hash,
+            timeStamp: timeStamp,
+            note: note));
+      });
+    }
+    print(transactions);
     return transactions;
   }
 

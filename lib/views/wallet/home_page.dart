@@ -234,7 +234,8 @@ class _HomePageState extends State<HomePage> {
           ));
     });
     setState(() async {
-      var newWallet = await netWorkingBrain.createNewWallet(name);
+      var newWallet =
+          await netWorkingBrain.createNewWallet(name, currentWallet);
       wallets.add(newWallet);
       walletButtons.removeAt(0);
       insertWalletButton(newWallet);
@@ -327,14 +328,20 @@ class _HomePageState extends State<HomePage> {
   Future<void> drawTransactionBoxes(Wallet wallet) async {
     List transactions = await netWorkingBrain.getTransactions(wallet);
     boxes.clear();
-    transactions.forEach((transaction) {
-      setState(() {
-        boxes.add(SizedBox(
-          height: 30.0,
-        ));
-        boxes.add(drawTransactionBox(transaction, boxes.length));
+    if (transactions.length != 0) {
+      transactions.forEach((transaction) {
+        setState(() {
+          boxes.add(SizedBox(
+            height: 30.0,
+          ));
+          boxes.add(drawTransactionBox(transaction, boxes.length));
+        });
       });
-    });
+    } else {
+      setState(() {
+        boxes.clear();
+      });
+    }
   }
 
   @override
