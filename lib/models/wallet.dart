@@ -1,11 +1,15 @@
 class Wallet {
   String walletName;
+  String walletAddress;
+  String mnemonic;
+
   int walletNumber;
   double balance;
-  String walletAddress;
+
   var transactions = [];
 
-  Wallet({this.walletAddress, this.walletNumber, this.walletName});
+  Wallet(
+      {this.walletAddress, this.walletNumber, this.walletName, this.mnemonic});
 
   updateBalance(newBalance) {
     this.balance = newBalance;

@@ -32,8 +32,18 @@ dependencies:
   http: ^0.12.2
   flutter_spinkit: ^3.1.0
   clipboard_manager: ^0.0.1
+  flutter_launcher_icons: "^0.8.0"
+
+flutter_icons:
+  android: true
+  ios: false
+  image_path: "images/eth.png"
+
+flutter_launcher_name:
+  name: "Eth Wallet"
 
 dev_dependencies:
+  flutter_launcher_name: "^0.0.1"
   flutter_test:
     sdk: flutter
 

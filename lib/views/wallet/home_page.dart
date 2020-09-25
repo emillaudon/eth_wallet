@@ -54,7 +54,7 @@ class _HomePageState extends State<HomePage> {
     initializeWalletButtons();
   }
 
-  void updateWalletVariables(wallet) async {
+  void updateWalletVariables(Wallet wallet) async {
     double balance = await netWorkingBrain.getEthBalance(wallet.walletAddress);
     wallet.updateBalance(balance);
     setState(() {
@@ -285,17 +285,15 @@ class _HomePageState extends State<HomePage> {
         boxes.insert((0), Center(child: Text('Sending...')));
       });
 
-      print(boxes.length);
-      print('clicked');
-
-      var newBalancesponse = await netWorkingBrain
-          .perFormTransactionAndReturnNewBalance(transactionData);
+      var newBalancesponse =
+          await netWorkingBrain.perFormTransactionAndReturnNewBalance(
+              currentWallet.walletNumber, transactionData);
 
       if (newBalancesponse.statusCode == 201) {
         setState(() {
           updateBalance(newBalancesponse);
         });
-        drawTransactionBoxes(wallets[0].walletNumber);
+        drawTransactionBoxes(currentWallet);
       }
     }
   }
@@ -326,7 +324,7 @@ class _HomePageState extends State<HomePage> {
         index);
   }
 
-  Future<void> drawTransactionBoxes(wallet) async {
+  Future<void> drawTransactionBoxes(Wallet wallet) async {
     List transactions = await netWorkingBrain.getTransactions(wallet);
     boxes.clear();
     transactions.forEach((transaction) {
@@ -483,7 +481,14 @@ class _HomePageState extends State<HomePage> {
           ),
           Expanded(
             child: RefreshIndicator(
-              onRefresh: () => drawTransactionBoxes(wallets[0].walletNumber),
+              onRefresh: () async {
+                drawTransactionBoxes(currentWallet);
+                var balance = await netWorkingBrain
+                    .getEthBalance(currentWallet.walletAddress);
+                setState(() {
+                  currentWallet.updateBalance(balance);
+                });
+              },
               child: ListView.builder(
                   padding: EdgeInsets.zero,
                   itemCount: boxes.length,

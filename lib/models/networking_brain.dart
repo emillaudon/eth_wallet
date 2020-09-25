@@ -38,9 +38,11 @@ class NetWorkingBrain {
     return data['quotes']['USD']['price'];
   }
 
-  Future perFormTransactionAndReturnNewBalance(transactionData) async {
+  Future perFormTransactionAndReturnNewBalance(
+      walletNumber, transactionData) async {
     var newBalance = await http.post(apiHandler.sendEndPoint(), body: {
-      "address": "${transactionData['address']}",
+      "walletNumber": "${walletNumber}",
+      "recipient": "${transactionData['address']}",
       "amount": "${transactionData['amount']}",
       "note":
           "${transactionData['note'] != null ? transactionData['note'] : 'null'}"
@@ -68,7 +70,7 @@ class NetWorkingBrain {
     await http.delete(apiHandler.deleteWalletEndPoint(wallet.walletAddress));
   }
 
-  Future getTransactions(wallet) async {
+  Future getTransactions(Wallet wallet) async {
     List transactions = [];
     String URL = apiHandler.transactionsEndPoint(wallet.walletNumber);
     var response = await http.get(URL);
