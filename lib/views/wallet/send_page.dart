@@ -108,7 +108,8 @@ class _SendPageState extends State<SendPage> {
             transactionData['address'] = myAddressController.text;
             transactionData['amount'] =
                 myAmountController.text.replaceAll(',', '.');
-            transactionData['note'] = myNoteController.text;
+            transactionData['note'] =
+                myNoteController.text != "" ? myNoteController.text : null;
 
             Navigator.pop(context, transactionData);
           },

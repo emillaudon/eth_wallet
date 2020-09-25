@@ -25,11 +25,14 @@ class _CreatePageState extends State<CreatePage> {
     String newMnemonic = '';
     for (int i = 0; i < 12; i++) {
       var wordPair = WordPair.random();
-      String nmnemonic = wordPair.asPascalCase;
+      String nmnemonic = wordPair.asLowerCase;
       newMnemonic += " ${nmnemonic}";
       mnemonicWords.add(Text(
         nmnemonic,
-        style: TextStyle(fontSize: 20.0),
+        style: TextStyle(
+          fontSize: 20.0,
+        ),
+        textAlign: TextAlign.center,
       ));
     }
     setState(() {
@@ -48,8 +51,16 @@ class _CreatePageState extends State<CreatePage> {
             SizedBox(height: 150.0),
             Center(
               child: Container(
-                child: Text(mnemonic),
-                height: 300.0,
+                child: Center(
+                  child: Text(
+                    mnemonic,
+                    style: TextStyle(
+                      fontSize: 28.0,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+                height: 240.0,
                 width: 380.0,
                 decoration: BoxDecoration(
                     color: Color(0xFF0A0E21),
